@@ -1,0 +1,13 @@
+*
+!.gitignore
+
+!tcl
+!tcl/*
+
+!constraints
+!constraints/*
+
+!microblaze_code
+!microblaze_code/*
+
+!README.md

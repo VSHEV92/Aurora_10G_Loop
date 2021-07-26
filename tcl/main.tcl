@@ -12,6 +12,14 @@ if { [file exists $Project_Name] != 0 } {
 # создаем проект
 create_project $Project_Name ./$Project_Name -part xcku5p-ffvb676-2-e
 
+# настройка кэша ip ядер
+config_ip_cache -import_from_project -use_cache_location ip_cache
+update_ip_catalog
+
+# добавление constraint файлов
+add_files -fileset constrs_1 constraints/pins.xdc
+add_files -fileset constrs_1 constraints/timing.xdc
+
 # -----------------------------------------------------------
 # создаем block design
 create_bd_design "Aurua_Loop"
@@ -36,16 +44,12 @@ source tcl/microblaze_subsystem.tcl
 
 # -----------------------------------------------------------
 # сигналы SFP Hot Plug и TX Disable
-create_bd_cell -type ip -vlnv xilinx.com:ip:util_vector_logic:2.0 util_vector_logic_0
-set_property -dict [list CONFIG.C_SIZE {4} CONFIG.C_OPERATION {not} CONFIG.LOGO_FILE {data/sym_notgate.png}] [get_bd_cells util_vector_logic_0]
-make_bd_pins_external  [get_bd_pins util_vector_logic_0/Op1]
-set_property name Hot_Plug [get_bd_ports Op1_0]
-connect_bd_net [get_bd_pins util_vector_logic_0/Res] [get_bd_pins microblaze_subsystem/SPF_hot_pug]
-create_bd_port -dir O -from 3 -to 0 Hot_Plug_LEDs
-connect_bd_net [get_bd_ports Hot_Plug_LEDs] [get_bd_pins util_vector_logic_0/Res]
+create_bd_port -dir I -from 1 -to 0 Hot_Plug
+create_bd_port -dir O -from 1 -to 0 Hot_Plug_LEDs
+connect_bd_net [get_bd_ports Hot_Plug] [get_bd_ports Hot_Plug_LEDs]
 
 create_bd_cell -type ip -vlnv xilinx.com:ip:xlconstant:1.1 xlconstant_0
-set_property -dict [list CONFIG.CONST_WIDTH {4} CONFIG.CONST_VAL {0}] [get_bd_cells xlconstant_0]
+set_property -dict [list CONFIG.CONST_VAL {0}] [get_bd_cells xlconstant_0]
 make_bd_pins_external  [get_bd_pins xlconstant_0/dout]
 set_property name TX_Disable [get_bd_ports dout_0]
 
@@ -64,6 +68,9 @@ set_property name link_up [get_bd_ports dout_0]
 connect_bd_net [get_bd_pins aurora_subsystem/init_clk] [get_bd_pins util_ds_buf_1/BUFG_O]
 connect_bd_net [get_bd_pins microblaze_subsystem/aurora_reset] [get_bd_pins aurora_subsystem/reset_pb]
 connect_bd_net [get_bd_pins microblaze_subsystem/aurora_pma_init] [get_bd_pins aurora_subsystem/pma_init]
+
+connect_bd_net [get_bd_pins microblaze_subsystem/SPF_hot_pug] [get_bd_pins aurora_subsystem/link_up]
+
 
 # -----------------------------------------------------------
 # проверка итогового проекта и создание wrapper

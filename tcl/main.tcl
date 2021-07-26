@@ -22,7 +22,7 @@ add_files -fileset constrs_1 constraints/timing.xdc
 
 # -----------------------------------------------------------
 # создаем block design
-create_bd_design "Aurua_Loop"
+create_bd_design "Aurora_Loop"
 
 # -----------------------------------------------------------
 # буферы для тактового сигнала 125 MHz

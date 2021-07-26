@@ -10,4 +10,6 @@
 !microblaze_code
 !microblaze_code/*
 
+!aurora_loop.xsa
+
 !README.md

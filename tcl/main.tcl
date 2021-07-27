@@ -43,6 +43,14 @@ set_property CONFIG.FREQ_HZ 125000000 [get_bd_intf_ports /CLK_125_DS]
 source tcl/microblaze_subsystem.tcl
 
 # -----------------------------------------------------------
+# создание подсистемы с dual clock 
+source tcl/fifo_subsystem.tcl
+
+# -----------------------------------------------------------
+# создание подсистемы с ядрами Aurora 
+#source tcl/aurora_subsystem.tcl
+
+# -----------------------------------------------------------
 # сигналы SFP Hot Plug и TX Disable
 create_bd_port -dir I -from 1 -to 0 Hot_Plug
 create_bd_port -dir O -from 1 -to 0 Hot_Plug_LEDs
@@ -53,9 +61,6 @@ set_property -dict [list CONFIG.CONST_VAL {0}] [get_bd_cells xlconstant_0]
 make_bd_pins_external  [get_bd_pins xlconstant_0/dout]
 set_property name TX_Disable [get_bd_ports dout_0]
 
-# -----------------------------------------------------------
-# создание подсистемы с ядрами Aurora 
-source tcl/aurora_subsystem.tcl
 
 # -----------------------------------------------------------
 # внешний сигнал сброса и link up
@@ -78,6 +83,3 @@ regenerate_bd_layout
 validate_bd_design
 save_bd_design
 close_bd_design [get_bd_designs Aurua_Loop]
-
-make_wrapper -files [get_files Aurora_Loop/Aurora_Loop.srcs/sources_1/bd/Aurua_Loop/Aurua_Loop.bd] -top
-add_files -norecurse Aurora_Loop/Aurora_Loop.srcs/sources_1/bd/Aurua_Loop/hdl/Aurua_Loop_wrapper.v

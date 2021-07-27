@@ -6,6 +6,7 @@
 create_bd_cell -type ip -vlnv xilinx.com:ip:microblaze:11.0 microblaze_0
 apply_bd_automation -rule xilinx.com:bd_rule:microblaze -config { axi_intc {1} axi_periph {Enabled} cache {None} clk {/util_ds_buf_1/BUFG_O (125 MHz)} debug_module {Debug Only} ecc {None} local_mem {64KB} preset {None}}  [get_bd_cells microblaze_0]
 set_property -dict [list CONFIG.NUM_PORTS {1}] [get_bd_cells microblaze_0_xlconcat]
+set_property -dict [list CONFIG.C_FSL_LINKS {3}] [get_bd_cells microblaze_0]
 
 # создание иерархии
 group_bd_cells microblaze_subsystem [get_bd_cells rst_util_ds_buf_1_100M] [get_bd_cells microblaze_0_xlconcat] [get_bd_cells microblaze_0] [get_bd_cells microblaze_0_axi_intc] [get_bd_cells microblaze_0_axi_periph] [get_bd_cells microblaze_0_local_memory]
@@ -63,6 +64,23 @@ create_bd_pin -dir I -from 3 -to 0 SPF_hot_pug
 connect_bd_net [get_bd_pins SPF_hot_pug] [get_bd_pins axi_gpio_hot_plug/gpio_io_i]
 
 connect_bd_net [get_bd_pins axi_gpio_hot_plug/ip2intc_irpt] [get_bd_pins microblaze_0_xlconcat/In0]
+
+# создание axi stream портов
+create_bd_intf_pin -mode Master -vlnv xilinx.com:interface:axis_rtl:1.0 CH_1_TX
+create_bd_intf_pin -mode Master -vlnv xilinx.com:interface:axis_rtl:1.0 CH_2_TX
+create_bd_intf_pin -mode Master -vlnv xilinx.com:interface:axis_rtl:1.0 CH_3_TX
+create_bd_intf_pin -mode Slave -vlnv xilinx.com:interface:axis_rtl:1.0 CH_1_RX
+create_bd_intf_pin -mode Slave -vlnv xilinx.com:interface:axis_rtl:1.0 CH_2_RX
+create_bd_intf_pin -mode Slave -vlnv xilinx.com:interface:axis_rtl:1.0 CH_3_RX
+
+# подключение axi stream портов
+connect_bd_intf_net [get_bd_intf_pins CH_1_RX] [get_bd_intf_pins microblaze_0/S0_AXIS]
+connect_bd_intf_net [get_bd_intf_pins CH_2_RX] [get_bd_intf_pins microblaze_0/S1_AXIS]
+connect_bd_intf_net [get_bd_intf_pins CH_3_RX] [get_bd_intf_pins microblaze_0/S2_AXIS]
+
+connect_bd_intf_net [get_bd_intf_pins CH_1_TX] [get_bd_intf_pins microblaze_0/M0_AXIS]
+connect_bd_intf_net [get_bd_intf_pins CH_2_TX] [get_bd_intf_pins microblaze_0/M1_AXIS]
+connect_bd_intf_net [get_bd_intf_pins CH_3_TX] [get_bd_intf_pins microblaze_0/M2_AXIS]
 
 assign_bd_address
 

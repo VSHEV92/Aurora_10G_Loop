@@ -16,13 +16,14 @@ set_property -dict [list CONFIG.CHANNEL_ENABLE {X0Y8} CONFIG.C_INIT_CLK {125} CO
 create_bd_cell -type ip -vlnv xilinx.com:ip:aurora_64b66b:12.0 aurora_card2fmc_loop
 
 set_property -dict [list CONFIG.C_INIT_CLK.VALUE_SRC USER] [get_bd_cells aurora_card2fmc_loop]
-set_property -dict [list CONFIG.CHANNEL_ENABLE {X0Y9} CONFIG.C_INIT_CLK {125} CONFIG.dataflow_config {RX-only_Simplex} CONFIG.interface_mode {Streaming} CONFIG.C_START_QUAD {Quad_X0Y2} CONFIG.C_START_LANE {X0Y9} CONFIG.C_REFCLK_SOURCE {MGTREFCLK1_of_Quad_X0Y2}] [get_bd_cells aurora_card2fmc_loop]
+set_property -dict [list CONFIG.CHANNEL_ENABLE {X0Y9} CONFIG.C_INIT_CLK {125} CONFIG.interface_mode {Streaming} CONFIG.C_START_QUAD {Quad_X0Y2} CONFIG.C_START_LANE {X0Y9} CONFIG.C_REFCLK_SOURCE {MGTREFCLK1_of_Quad_X0Y2}] [get_bd_cells aurora_card2fmc_loop]
 
 # соединение ядер аврора
 connect_bd_net [get_bd_pins aurora_card_loop/mmcm_not_locked_out] [get_bd_pins aurora_card2fmc_loop/mmcm_not_locked]
 connect_bd_net [get_bd_pins aurora_card_loop/gt_qplllock_quad1_out] [get_bd_pins aurora_card2fmc_loop/gt_qplllock_quad1_in]
 connect_bd_net [get_bd_pins aurora_card_loop/gt_qpllrefclklost_quad1_out] [get_bd_pins aurora_card2fmc_loop/gt_qpllrefclklost_quad1]
 connect_bd_net [get_bd_pins aurora_card_loop/user_clk_out] [get_bd_pins aurora_card2fmc_loop/user_clk]
+connect_bd_net [get_bd_pins aurora_card2fmc_loop/sync_clk] [get_bd_pins aurora_card_loop/sync_clk_out]
 
 connect_bd_net [get_bd_pins aurora_card2fmc_loop/reset_pb] [get_bd_pins aurora_card_loop/sys_reset_out]
 connect_bd_net [get_bd_pins aurora_card2fmc_loop/pma_init] [get_bd_pins aurora_card_loop/gt_reset_out]
@@ -51,7 +52,7 @@ set_property -dict [list CONFIG.CHANNEL_ENABLE {X0Y12} CONFIG.C_INIT_CLK {125} C
 create_bd_cell -type ip -vlnv xilinx.com:ip:aurora_64b66b:12.0 aurora_fmc2card_loop
 
 set_property -dict [list CONFIG.C_INIT_CLK.VALUE_SRC USER] [get_bd_cells aurora_fmc2card_loop]
-set_property -dict [list CONFIG.CHANNEL_ENABLE {X0Y13} CONFIG.C_INIT_CLK {125} CONFIG.dataflow_config {TX-only_Simplex} CONFIG.interface_mode {Streaming} CONFIG.C_START_QUAD {Quad_X0Y3} CONFIG.C_START_LANE {X0Y13} CONFIG.C_REFCLK_SOURCE {MGTREFCLK0_of_Quad_X0Y3}] [get_bd_cells aurora_fmc2card_loop]
+set_property -dict [list CONFIG.CHANNEL_ENABLE {X0Y13} CONFIG.C_INIT_CLK {125} CONFIG.interface_mode {Streaming} CONFIG.C_START_QUAD {Quad_X0Y3} CONFIG.C_START_LANE {X0Y13} CONFIG.C_REFCLK_SOURCE {MGTREFCLK0_of_Quad_X0Y3}] [get_bd_cells aurora_fmc2card_loop]
 
 # соединение ядер аврора
 connect_bd_net [get_bd_pins aurora_fmc_loop/mmcm_not_locked_out] [get_bd_pins aurora_fmc2card_loop/mmcm_not_locked]
@@ -74,8 +75,8 @@ make_bd_intf_pins_external  [get_bd_intf_pins aurora_fmc_loop/GT_SERIAL_RX]
 make_bd_intf_pins_external  [get_bd_intf_pins aurora_fmc_loop/GT_SERIAL_TX]
 
 # SFP 1 TX/RX lane
-make_bd_intf_pins_external  [get_bd_intf_pins aurora_fmc2card_loop/GT_SERIAL_RX]
 make_bd_intf_pins_external  [get_bd_intf_pins aurora_fmc2card_loop/GT_SERIAL_TX]
+make_bd_intf_pins_external  [get_bd_intf_pins aurora_fmc2card_loop/GT_SERIAL_RX]
 
 # ----------------------------------------------------------------------------------------------------
 # link up signals
@@ -85,8 +86,8 @@ make_bd_pins_external  [get_bd_pins xlconcat_0/dout]
 set_property name link_up [get_bd_pins dout_0]
 connect_bd_net [get_bd_pins aurora_card_loop/channel_up] [get_bd_pins xlconcat_0/In0]
 connect_bd_net [get_bd_pins aurora_fmc_loop/channel_up] [get_bd_pins xlconcat_0/In1]
-connect_bd_net [get_bd_pins aurora_fmc2card_loop/tx_channel_up] [get_bd_pins xlconcat_0/In2]
-connect_bd_net [get_bd_pins aurora_card2fmc_loop/rx_channel_up] [get_bd_pins xlconcat_0/In3]
+connect_bd_net [get_bd_pins aurora_fmc2card_loop/channel_up] [get_bd_pins xlconcat_0/In2]
+connect_bd_net [get_bd_pins aurora_card2fmc_loop/channel_up] [get_bd_pins xlconcat_0/In3]
 
 # init_clk, pma_init, reset
 create_bd_pin -dir I init_clk

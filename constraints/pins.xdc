@@ -21,6 +21,9 @@ set_property IOSTANDARD LVCMOS18 [get_ports {TX_Disable[0]}]
 # aurora card clk ref
 set_property PACKAGE_PIN M7 [get_ports GT_DIFF_REFCLK1_0_clk_p]
 
+# aurora fmc clk ref
+set_property PACKAGE_PIN K7 [get_ports GT_DIFF_REFCLK1_1_clk_p]
+
 # link up leds
 set_property PACKAGE_PIN G10 [get_ports {link_up[0]}]
 set_property PACKAGE_PIN G9 [get_ports {link_up[1]}]
@@ -40,4 +43,3 @@ set_property PACKAGE_PIN W12 [get_ports UART_0_rxd]
 set_property PACKAGE_PIN W13 [get_ports UART_0_txd]
 set_property IOSTANDARD LVCMOS33 [get_ports UART_0_rxd]
 set_property IOSTANDARD LVCMOS33 [get_ports UART_0_txd]
-

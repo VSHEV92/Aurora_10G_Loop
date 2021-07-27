@@ -5,7 +5,7 @@
 # добавление microblaze
 create_bd_cell -type ip -vlnv xilinx.com:ip:microblaze:11.0 microblaze_0
 apply_bd_automation -rule xilinx.com:bd_rule:microblaze -config { axi_intc {1} axi_periph {Enabled} cache {None} clk {/util_ds_buf_1/BUFG_O (125 MHz)} debug_module {Debug Only} ecc {None} local_mem {64KB} preset {None}}  [get_bd_cells microblaze_0]
-set_property -dict [list CONFIG.NUM_PORTS {1}] [get_bd_cells microblaze_0_xlconcat]
+set_property -dict [list CONFIG.NUM_PORTS {2}] [get_bd_cells microblaze_0_xlconcat]
 set_property -dict [list CONFIG.C_FSL_LINKS {3}] [get_bd_cells microblaze_0]
 
 # создание иерархии
@@ -17,10 +17,12 @@ create_bd_cell -type ip -vlnv xilinx.com:ip:xlconstant:1.1 xlconstant_0
 connect_bd_net [get_bd_pins xlconstant_0/dout] [get_bd_pins rst_util_ds_buf_1_100M/dcm_locked]
 
 # увеличение числа портов interconnect
-set_property -dict [list CONFIG.NUM_MI {4}] [get_bd_cells microblaze_0_axi_periph]
+set_property -dict [list CONFIG.NUM_MI {5}] [get_bd_cells microblaze_0_axi_periph]
 connect_bd_net [get_bd_pins Clk] [get_bd_pins microblaze_0_axi_periph/M01_ACLK]
 connect_bd_net [get_bd_pins Clk] [get_bd_pins microblaze_0_axi_periph/M02_ACLK]
 connect_bd_net [get_bd_pins Clk] [get_bd_pins microblaze_0_axi_periph/M03_ACLK]
+connect_bd_net [get_bd_pins Clk] [get_bd_pins microblaze_0_axi_periph/M04_ACLK]
+connect_bd_net [get_bd_pins microblaze_0_axi_periph/M04_ARESETN] [get_bd_pins rst_util_ds_buf_1_100M/peripheral_aresetn]
 connect_bd_net [get_bd_pins microblaze_0_axi_periph/M03_ARESETN] [get_bd_pins rst_util_ds_buf_1_100M/peripheral_aresetn]
 connect_bd_net [get_bd_pins microblaze_0_axi_periph/M02_ARESETN] [get_bd_pins rst_util_ds_buf_1_100M/peripheral_aresetn]
 connect_bd_net [get_bd_pins microblaze_0_axi_periph/M01_ARESETN] [get_bd_pins rst_util_ds_buf_1_100M/peripheral_aresetn]
@@ -37,6 +39,16 @@ connect_bd_net [get_bd_pins Clk] [get_bd_pins axi_uartlite_0/s_axi_aclk]
 connect_bd_net [get_bd_pins axi_uartlite_0/s_axi_aresetn] [get_bd_pins rst_util_ds_buf_1_100M/peripheral_aresetn]
 
 make_bd_intf_pins_external  [get_bd_intf_pins axi_uartlite_0/UART]
+
+# добавление Timer
+create_bd_cell -type ip -vlnv xilinx.com:ip:axi_timer:2.0 axi_timer_0
+set_property -dict [list CONFIG.enable_timer2 {0}] [get_bd_cells axi_timer_0]
+
+connect_bd_intf_net [get_bd_intf_pins axi_timer_0/S_AXI] -boundary_type upper [get_bd_intf_pins microblaze_0_axi_periph/M04_AXI]
+connect_bd_net [get_bd_pins Clk] [get_bd_pins axi_timer_0/s_axi_aclk]
+connect_bd_net [get_bd_pins axi_timer_0/s_axi_aresetn] [get_bd_pins rst_util_ds_buf_1_100M/peripheral_aresetn]
+
+connect_bd_net [get_bd_pins axi_timer_0/interrupt] [get_bd_pins microblaze_0_xlconcat/In1]
 
 # добавление GPIO Aurora Reset
 create_bd_cell -type ip -vlnv xilinx.com:ip:axi_gpio:2.0 axi_gpio_reset
@@ -81,6 +93,10 @@ connect_bd_intf_net [get_bd_intf_pins CH_3_RX] [get_bd_intf_pins microblaze_0/S2
 connect_bd_intf_net [get_bd_intf_pins CH_1_TX] [get_bd_intf_pins microblaze_0/M0_AXIS]
 connect_bd_intf_net [get_bd_intf_pins CH_2_TX] [get_bd_intf_pins microblaze_0/M1_AXIS]
 connect_bd_intf_net [get_bd_intf_pins CH_3_TX] [get_bd_intf_pins microblaze_0/M2_AXIS]
+
+# сигнал сброса периферии
+create_bd_pin -dir O mb_periph_resetn
+connect_bd_net [get_bd_pins mb_periph_resetn] [get_bd_pins rst_util_ds_buf_1_100M/peripheral_aresetn]
 
 assign_bd_address
 

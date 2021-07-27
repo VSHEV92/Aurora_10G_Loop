@@ -48,7 +48,7 @@ source tcl/fifo_subsystem.tcl
 
 # -----------------------------------------------------------
 # создание подсистемы с ядрами Aurora 
-#source tcl/aurora_subsystem.tcl
+source tcl/aurora_subsystem.tcl
 
 # -----------------------------------------------------------
 # сигналы SFP Hot Plug и TX Disable
@@ -59,8 +59,7 @@ connect_bd_net [get_bd_ports Hot_Plug] [get_bd_ports Hot_Plug_LEDs]
 create_bd_cell -type ip -vlnv xilinx.com:ip:xlconstant:1.1 xlconstant_0
 set_property -dict [list CONFIG.CONST_VAL {0}] [get_bd_cells xlconstant_0]
 make_bd_pins_external  [get_bd_pins xlconstant_0/dout]
-set_property name TX_Disable [get_bd_ports dout_0]
-
+set_property name TX_Disable [get_bd_ports dout_1]
 
 # -----------------------------------------------------------
 # внешний сигнал сброса и link up
@@ -76,9 +75,52 @@ connect_bd_net [get_bd_pins microblaze_subsystem/aurora_pma_init] [get_bd_pins a
 
 connect_bd_net [get_bd_pins microblaze_subsystem/SPF_hot_pug] [get_bd_pins aurora_subsystem/link_up]
 
+connect_bd_net [get_bd_pins fifo_subsystem/clk_mb]            [get_bd_pins util_ds_buf_1/BUFG_O]
+connect_bd_net [get_bd_pins aurora_subsystem/clk_aurora_card] [get_bd_pins fifo_subsystem/clk_aurora_card]
+connect_bd_net [get_bd_pins aurora_subsystem/clk_aurora_fmc]  [get_bd_pins fifo_subsystem/clk_aurora_fmc]
+
+connect_bd_net [get_bd_pins fifo_subsystem/reset_card_n]         [get_bd_pins aurora_subsystem/reset_aurora_card_n]
+connect_bd_net [get_bd_pins aurora_subsystem/reset_aurora_fmc_n] [get_bd_pins fifo_subsystem/reset_fmc_n]
+
+connect_bd_intf_net [get_bd_intf_pins microblaze_subsystem/CH_1_TX] [get_bd_intf_pins fifo_subsystem/CH_mb_1_TX]
+connect_bd_intf_net [get_bd_intf_pins microblaze_subsystem/CH_2_TX] [get_bd_intf_pins fifo_subsystem/CH_mb_2_TX]
+connect_bd_intf_net [get_bd_intf_pins microblaze_subsystem/CH_3_TX] [get_bd_intf_pins fifo_subsystem/CH_mb_3_TX]
+
+connect_bd_intf_net [get_bd_intf_pins fifo_subsystem/CH_aurora_1_TX] [get_bd_intf_pins aurora_subsystem/CH_1_TX]
+connect_bd_intf_net [get_bd_intf_pins fifo_subsystem/CH_aurora_2_TX] [get_bd_intf_pins aurora_subsystem/CH_2_TX]
+connect_bd_intf_net [get_bd_intf_pins fifo_subsystem/CH_aurora_3_TX] [get_bd_intf_pins aurora_subsystem/CH_3_TX]
+
+connect_bd_intf_net [get_bd_intf_pins fifo_subsystem/CH_mb_1_RX] [get_bd_intf_pins microblaze_subsystem/CH_1_RX]
+connect_bd_intf_net [get_bd_intf_pins fifo_subsystem/CH_mb_2_RX] [get_bd_intf_pins microblaze_subsystem/CH_2_RX]
+connect_bd_intf_net [get_bd_intf_pins fifo_subsystem/CH_mb_3_RX] [get_bd_intf_pins microblaze_subsystem/CH_3_RX]
+
+connect_bd_intf_net [get_bd_intf_pins aurora_subsystem/CH_1_RX] [get_bd_intf_pins fifo_subsystem/CH_aurora_1_RX]
+connect_bd_intf_net [get_bd_intf_pins aurora_subsystem/CH_2_RX] [get_bd_intf_pins fifo_subsystem/CH_aurora_2_RX]
+connect_bd_intf_net [get_bd_intf_pins aurora_subsystem/CH_3_RX] [get_bd_intf_pins fifo_subsystem/CH_aurora_3_RX]
 
 # -----------------------------------------------------------
-# проверка итогового проекта и создание wrapper
+# добавление ila
+create_bd_cell -type ip -vlnv xilinx.com:ip:system_ila:1.1 system_ila_0
+set_property -dict [list CONFIG.C_BRAM_CNT {6} CONFIG.C_NUM_MONITOR_SLOTS {6}] [get_bd_cells system_ila_0]
+set_property -dict [list CONFIG.C_BRAM_CNT {35} CONFIG.C_SLOT_0_INTF_TYPE {xilinx.com:interface:axis_rtl:1.0}] [get_bd_cells system_ila_0]
+set_property -dict [list CONFIG.C_BRAM_CNT {35} CONFIG.C_SLOT_1_INTF_TYPE {xilinx.com:interface:axis_rtl:1.0}] [get_bd_cells system_ila_0]
+set_property -dict [list CONFIG.C_BRAM_CNT {35} CONFIG.C_SLOT_2_INTF_TYPE {xilinx.com:interface:axis_rtl:1.0}] [get_bd_cells system_ila_0]
+set_property -dict [list CONFIG.C_BRAM_CNT {35} CONFIG.C_SLOT_3_INTF_TYPE {xilinx.com:interface:axis_rtl:1.0}] [get_bd_cells system_ila_0]
+set_property -dict [list CONFIG.C_BRAM_CNT {35} CONFIG.C_SLOT_4_INTF_TYPE {xilinx.com:interface:axis_rtl:1.0}] [get_bd_cells system_ila_0]
+set_property -dict [list CONFIG.C_BRAM_CNT {35} CONFIG.C_SLOT_5_INTF_TYPE {xilinx.com:interface:axis_rtl:1.0}] [get_bd_cells system_ila_0]
+set_property -dict [list CONFIG.C_BRAM_CNT {2} CONFIG.C_EN_STRG_QUAL {1} CONFIG.C_INPUT_PIPE_STAGES {6} CONFIG.C_PROBE0_MU_CNT {2} CONFIG.ALL_PROBE_SAME_MU_CNT {2}] [get_bd_cells system_ila_0]
+connect_bd_net [get_bd_pins system_ila_0/clk] [get_bd_pins util_ds_buf_1/BUFG_O]
+connect_bd_net [get_bd_pins system_ila_0/resetn] [get_bd_pins microblaze_subsystem/mb_periph_resetn]
+
+connect_bd_intf_net [get_bd_intf_pins system_ila_0/SLOT_0_AXIS] [get_bd_intf_pins microblaze_subsystem/CH_1_RX]
+connect_bd_intf_net [get_bd_intf_pins system_ila_0/SLOT_1_AXIS] [get_bd_intf_pins microblaze_subsystem/CH_2_RX]
+connect_bd_intf_net [get_bd_intf_pins system_ila_0/SLOT_2_AXIS] [get_bd_intf_pins microblaze_subsystem/CH_3_RX]
+connect_bd_intf_net [get_bd_intf_pins system_ila_0/SLOT_3_AXIS] [get_bd_intf_pins fifo_subsystem/CH_mb_1_TX]
+connect_bd_intf_net [get_bd_intf_pins system_ila_0/SLOT_4_AXIS] [get_bd_intf_pins fifo_subsystem/CH_mb_2_TX]
+connect_bd_intf_net [get_bd_intf_pins system_ila_0/SLOT_5_AXIS] [get_bd_intf_pins fifo_subsystem/CH_mb_3_TX]
+
+# -----------------------------------------------------------
+# проверка итогового проекта
 regenerate_bd_layout
 validate_bd_design
 save_bd_design

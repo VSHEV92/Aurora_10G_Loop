@@ -2,6 +2,7 @@
 #include "xintc.h"
 #include "xparameters.h"
 #include "mb_interface.h"
+#include "xtmrctr.h"
 
 #include "aurora_loop.h"
 
@@ -10,25 +11,38 @@ extern unsigned char CH_2_State;
 extern unsigned char CH_3_State;
 
 void GpioHandler(void *CallbackRef);
+void TimerHandler(void *CallBackRef, u8 TmrCtrNumber);
 
-void init_platform(XGpio* Gpio_Reset, XGpio* Gpio_Hot_Plug, XIntc* Intr_Controller){
+void init_platform(XGpio* Gpio_Reset, XGpio* Gpio_Hot_Plug, XIntc* Intr_Controller, XTmrCtr* Timer){
+
+	int Status;
 
 	xil_printf("Init Platform Start\r\n");
 
 	// enable microblaze interrupts
 	microblaze_enable_interrupts();
 
+
+	// -------------------------------------------------------------------------------
+	// init timer
+	Status = XTmrCtr_Initialize(Timer, XPAR_TMRCTR_0_DEVICE_ID);
+	if (Status != XST_SUCCESS) {
+		xil_printf("Timer Init Fail\r\n");
+		return XST_FAILURE;
+	}
+
+	XTmrCtr_SetHandler(Timer, TimerHandler, Timer);
+	XTmrCtr_SetOptions(Timer, 0, XTC_INT_MODE_OPTION | XTC_DOWN_COUNT_OPTION);
+
+	//XTmrCtr_SetResetValue(Timer, 0, RESET_VALUE);
+
 	// -------------------------------------------------------------------------------
 	// init gpio reset
-	int Status;
 	Status = XGpio_Initialize(Gpio_Reset, XPAR_GPIO_1_DEVICE_ID);
 	if (Status != XST_SUCCESS) {
 		xil_printf("GPIO Reset Init Fail\r\n");
 		return XST_FAILURE;
 	}
-
-	// reset aurora
-	reset_aurora(Gpio_Reset);
 
 	// -------------------------------------------------------------------------------
 	// init gpio hot plug
@@ -47,12 +61,19 @@ void init_platform(XGpio* Gpio_Reset, XGpio* Gpio_Hot_Plug, XIntc* Intr_Controll
 	}
 
 	XIntc_Connect(Intr_Controller, XPAR_INTC_0_GPIO_0_VEC_ID, (XInterruptHandler)GpioHandler, Gpio_Hot_Plug);
+	XIntc_Connect(Intr_Controller, XPAR_INTC_0_TMRCTR_0_VEC_ID, (XInterruptHandler)XTmrCtr_InterruptHandler, Timer);
+
 	XIntc_Enable(Intr_Controller, XPAR_INTC_0_GPIO_0_VEC_ID);
+	XIntc_Enable(Intr_Controller, XPAR_INTC_0_TMRCTR_0_VEC_ID);
+
 	Status = XIntc_Start(Intr_Controller, XIN_REAL_MODE);
 	if (Status != XST_SUCCESS) {
 		xil_printf("Can't Interrupt Controller REAL MODE\r\n");
 		return XST_FAILURE;
 	}
+
+	// reset aurora
+	reset_aurora(Gpio_Reset, Timer);
 
 	// get current link state
 	unsigned char CH[3];
